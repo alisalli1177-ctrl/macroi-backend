@@ -19,9 +19,11 @@ def home():
 # Secure Vision & Text Analysis Endpoint (OpenAI GPT-4o)
 # All API keys stay on the server - the app never sees them.
 # -------------------------------------------------------------
+from typing import Optional, List
+
 class VisionRequest(BaseModel):
-    base64_image: Optional[str] = ""
-    base64_images: Optional[list[str]] = []
+    base64_image: Optional[str] = None
+    base64_images: Optional[List[str]] = None
     prompt: str
     model: Optional[str] = "gpt-4o-mini"
 
