@@ -20,7 +20,8 @@ def home():
 # All API keys stay on the server - the app never sees them.
 # -------------------------------------------------------------
 class VisionRequest(BaseModel):
-    base64_image: str
+    base64_image: Optional[str] = ""
+    base64_images: Optional[list[str]] = []
     prompt: str
     model: Optional[str] = "gpt-4o-mini"
 
@@ -37,13 +38,15 @@ def analyze_vision(req: VisionRequest):
     }
 
     # Build messages based on whether we have an image or not
+    content = [{"type": "text", "text": req.prompt}]
+    
     if req.base64_image and len(req.base64_image) > 10:
-        content = [
-            {"type": "text", "text": req.prompt},
-            {"type": "image_url", "image_url": {"url": req.base64_image}}
-        ]
-    else:
-        content = req.prompt
+        content.append({"type": "image_url", "image_url": {"url": req.base64_image}})
+        
+    if req.base64_images:
+        for img in req.base64_images:
+            if len(img) > 10:
+                content.append({"type": "image_url", "image_url": {"url": img}})
 
     payload = {
         "model": req.model,
