@@ -43,12 +43,12 @@ def analyze_vision(req: VisionRequest):
     content = [{"type": "text", "text": req.prompt}]
     
     if req.base64_image and len(req.base64_image) > 10:
-        content.append({"type": "image_url", "image_url": {"url": req.base64_image, "detail": "low"}})
+        content.append({"type": "image_url", "image_url": {"url": req.base64_image, "detail": "high"}})
         
     if req.base64_images:
         for img in req.base64_images:
             if len(img) > 10:
-                content.append({"type": "image_url", "image_url": {"url": img, "detail": "low"}})
+                content.append({"type": "image_url", "image_url": {"url": img, "detail": "high"}})
 
     payload = {
         "model": req.model,
