@@ -50,12 +50,12 @@ def analyze_vision(req: VisionRequest):
     content = [{"type": "text", "text": req.prompt}]
     
     if req.base64_image and len(req.base64_image) > 10:
-        content.append({"type": "image_url", "image_url": {"url": req.base64_image, "detail": "auto"}})
+        content.append({"type": "image_url", "image_url": {"url": req.base64_image, "detail": "low"}})
         
     if req.base64_images:
         for img in req.base64_images:
             if len(img) > 10:
-                content.append({"type": "image_url", "image_url": {"url": img, "detail": "auto"}})
+                content.append({"type": "image_url", "image_url": {"url": img, "detail": "low"}})
 
     # Use max_tokens from request; if not provided, auto-detect:
     # - Short JSON food analysis (no image or small image) → 150 tokens (fast!)
