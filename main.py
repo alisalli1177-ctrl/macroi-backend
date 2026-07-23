@@ -15,6 +15,11 @@ app = FastAPI()
 def home():
     return {"mesaj": "MacroAI Backend is active!"}
 
+@app.get("/ping")
+def ping():
+    """Warmup endpoint - call this on app start to prevent cold start delays"""
+    return {"status": "ok"}
+
 # -------------------------------------------------------------
 # Secure Vision & Text Analysis Endpoint (OpenAI GPT-4o)
 # All API keys stay on the server - the app never sees them.
@@ -26,6 +31,8 @@ class VisionRequest(BaseModel):
     base64_images: Optional[List[str]] = None
     prompt: str
     model: Optional[str] = "gpt-4o-mini"
+    max_tokens: Optional[int] = None  # App can override; defaults based on request type
+    temperature: Optional[float] = None
 
 @app.post("/analyze-vision")
 def analyze_vision(req: VisionRequest):
@@ -50,11 +57,29 @@ def analyze_vision(req: VisionRequest):
             if len(img) > 10:
                 content.append({"type": "image_url", "image_url": {"url": img, "detail": "auto"}})
 
+    # Use max_tokens from request; if not provided, auto-detect:
+    # - Short JSON food analysis (no image or small image) → 150 tokens (fast!)
+    # - Vision analysis → 200 tokens
+    # - Long text responses (form analysis) → 800 tokens
+    has_image = bool(req.base64_image and len(req.base64_image) > 10) or bool(req.base64_images)
+    is_form_analysis = "posture" in req.prompt.lower() or "form" in req.prompt.lower() or "exercise" in req.prompt.lower()
+    
+    if req.max_tokens:
+        max_tokens = req.max_tokens
+    elif is_form_analysis:
+        max_tokens = 800
+    elif has_image:
+        max_tokens = 200
+    else:
+        max_tokens = 150
+
+    temp = req.temperature if req.temperature is not None else 0.1
+
     payload = {
         "model": req.model,
         "messages": [{"role": "user", "content": content}],
-        "max_tokens": 500,
-        "temperature": 0.2
+        "max_tokens": max_tokens,
+        "temperature": temp
     }
 
     try:
